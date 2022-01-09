@@ -2,7 +2,7 @@
 
 ## 脚手架
 
-`https://github.com/e421083458/gin_scaffold`
+`https://github.com/lilj_01/gin_gateway`
 
 
 

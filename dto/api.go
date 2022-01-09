@@ -1,8 +1,8 @@
 package dto
 
 import (
-	"github.com/e421083458/gin_scaffold/public"
 	"github.com/gin-gonic/gin"
+	"github.com/lilj_01/gin_gateway/public"
 )
 
 type LoginInput struct {

@@ -1,4 +1,4 @@
-module github.com/e421083458/gin_scaffold
+module github.com/lilj_01/gin_gateway
 
 go 1.14
 
