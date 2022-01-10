@@ -7,7 +7,7 @@ import (
 
 // AdminLoginInput 管理员登陆输入结构体
 type AdminLoginInput struct {
-	UserName string `json:"username" form:"username" comment:"用户名" example:"admin" validate:"required"`
+	UserName string `json:"username" form:"username" comment:"用户名" example:"admin" validate:"required,is_valid_username"`
 	Password string `json:"password" form:"password" comment:"密码" example:"123456" validate:"required"`
 }
 
