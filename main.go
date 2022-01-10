@@ -9,7 +9,6 @@ import (
 	"github.com/lilj_01/gin_gateway/router"
 )
 
-// main
 func main() {
 	lib.InitModule("./conf/dev/", []string{"base", "mysql", "redis"})
 	defer lib.Destroy()
