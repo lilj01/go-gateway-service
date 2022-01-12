@@ -68,7 +68,7 @@ var doc = `{
                 "responses": {}
             }
         },
-        "/admin_login/login_out": {
+        "/admin_login/logout": {
             "get": {
                 "description": "管理员退出",
                 "consumes": [
@@ -81,7 +81,7 @@ var doc = `{
                     "管理员接口"
                 ],
                 "summary": "管理员退出",
-                "operationId": "/admin_login/login_out",
+                "operationId": "/admin_login/logout",
                 "responses": {}
             }
         }
