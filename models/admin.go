@@ -1,4 +1,4 @@
-package dao
+package models
 
 import (
 	"github.com/gin-gonic/gin"
@@ -23,11 +23,16 @@ func (t *Admin) TableName() string {
 	return "gateway_admin"
 }
 
-// FindByUsername 查询
-func (t *Admin) FindByUsername(c *gin.Context, tx *gorm.DB, search *Admin) (*Admin, error) {
+// Find 查询
+func (t *Admin) Find(c *gin.Context, tx *gorm.DB, search *Admin) (*Admin, error) {
 	out := &Admin{}
 	query := tx.WithContext(c)
-	query = query.Where("user_name = ?", search.Username)
+	if search != nil && search.Username != "" {
+		query = query.Where("user_name = ?", search.Username)
+	}
+	if search != nil && search.Id != 0 {
+		query = query.Where("id = ?", search.Id)
+	}
 	query = query.Where("is_delete = ?", 0)
 	err := query.Find(out).Error
 	if err != nil {
@@ -38,7 +43,7 @@ func (t *Admin) FindByUsername(c *gin.Context, tx *gorm.DB, search *Admin) (*Adm
 
 // LoginCheck 登录检查
 func (t *Admin) LoginCheck(c *gin.Context, tx *gorm.DB, param *dto.AdminLoginInput) (*Admin, error) {
-	adminInfo, err := t.FindByUsername(c, tx, &Admin{Username: param.UserName})
+	adminInfo, err := t.Find(c, tx, &Admin{Username: param.UserName})
 	if err != nil {
 		return nil, errors.New("管理员信息不存在")
 	}
@@ -47,4 +52,12 @@ func (t *Admin) LoginCheck(c *gin.Context, tx *gorm.DB, param *dto.AdminLoginInp
 		return nil, errors.New("password error")
 	}
 	return adminInfo, nil
+}
+
+// Save 保存
+func (t *Admin) Save(c *gin.Context, tx *gorm.DB) error {
+	if err := tx.WithContext(c).Save(t).Error; err != nil {
+		return err
+	}
+	return nil
 }

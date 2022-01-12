@@ -5,9 +5,9 @@ import (
 	"github.com/e421083458/golang_common/lib"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/lilj_01/gin_gateway/dao"
 	"github.com/lilj_01/gin_gateway/dto"
 	"github.com/lilj_01/gin_gateway/middleware"
+	"github.com/lilj_01/gin_gateway/models"
 	"github.com/lilj_01/gin_gateway/public"
 	"time"
 )
@@ -22,7 +22,7 @@ func AdminLoginRegister(routerGroup *gin.RouterGroup) {
 	routerGroup.GET("/logout", adminLogin.AdminLoginOut)
 }
 
-// AdminLogin action
+// AdminLogin godoc
 // @Summary 管理员登录
 // @Description 管理员登录
 // @Tags 管理员接口
@@ -37,20 +37,23 @@ func (adminLogin *AdminLoginController) AdminLogin(c *gin.Context) {
 	// 参数错误处理
 	if err := params.BindValidParam(c); err != nil {
 		middleware.ResponseError(c, 1001, err)
+		return
 	}
 	// 管理员登录业务说明
 	// 1.Username查询取得管理员信息
 	// 2.adminInfo.salt + params.Password sha256 ---> saltPassword
 	// 2.saltPassword == adminInfo.password
-	admin := &dao.Admin{}
+	admin := &models.Admin{}
 	// 数据库连接池的获取 default 取自配置文件 conf/dev/mysql_map.toml
 	tx, err := lib.GetGormPool("default")
 	if err != nil {
 		middleware.ResponseError(c, 1002, err)
+		return
 	}
 	admin, err = admin.LoginCheck(c, tx, params)
 	if err != nil {
 		middleware.ResponseError(c, 1003, err)
+		return
 	}
 	// 保存登录信息到session
 	saveAdminInfoToSession(admin, c)
@@ -61,7 +64,7 @@ func (adminLogin *AdminLoginController) AdminLogin(c *gin.Context) {
 }
 
 // saveAdminInfoToSession 保存登录信息到session
-func saveAdminInfoToSession(admin *dao.Admin, c *gin.Context) {
+func saveAdminInfoToSession(admin *models.Admin, c *gin.Context) {
 	sessionInfo := &dto.AdminSessionInfo{
 		ID:        admin.Id,
 		Username:  admin.Username,
@@ -70,13 +73,14 @@ func saveAdminInfoToSession(admin *dao.Admin, c *gin.Context) {
 	sessBytes, err := json.Marshal(sessionInfo)
 	if err != nil {
 		middleware.ResponseError(c, 1004, err)
+		return
 	}
 	session := sessions.Default(c)
 	session.Set(public.AdminSessionInfoKey, string(sessBytes))
 	session.Save()
 }
 
-// AdminLoginOut action
+// AdminLoginOut godoc
 // @Summary 管理员退出
 // @Description 管理员退出
 // @Tags 管理员接口
