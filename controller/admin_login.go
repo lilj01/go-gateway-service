@@ -19,6 +19,7 @@ type AdminLoginController struct {
 func AdminLoginRegister(routerGroup *gin.RouterGroup) {
 	adminLogin := AdminLoginController{}
 	routerGroup.POST("/login", adminLogin.AdminLogin)
+	routerGroup.GET("/login_out", adminLogin.AdminLoginOut)
 }
 
 // AdminLogin action
@@ -73,4 +74,20 @@ func saveAdminInfoToSession(admin *dao.Admin, c *gin.Context) {
 	session := sessions.Default(c)
 	session.Set(public.AdminSessionInfoKey, string(sessBytes))
 	session.Save()
+}
+
+// AdminLoginOut action
+// @Summary 管理员退出
+// @Description 管理员退出
+// @Tags 管理员接口
+// @ID /admin_login/login_out
+// @Accept json
+// @Produce json
+// Success 200 {object} middleware.Response{data=string} "success"
+// @Router /admin_login/login_out [get]
+func (adminLogin *AdminLoginController) AdminLoginOut(c *gin.Context) {
+	session := sessions.Default(c)
+	session.Delete(public.AdminSessionInfoKey)
+	session.Save()
+	middleware.ResponseSuccess(c, "success")
 }

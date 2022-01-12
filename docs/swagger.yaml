@@ -47,4 +47,16 @@ paths:
       summary: 管理员登录
       tags:
       - 管理员接口
+  /admin_login/login_out:
+    get:
+      consumes:
+      - application/json
+      description: 管理员退出
+      operationId: /admin_login/login_out
+      produces:
+      - application/json
+      responses: {}
+      summary: 管理员退出
+      tags:
+      - 管理员接口
 swagger: "2.0"
