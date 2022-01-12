@@ -7,6 +7,7 @@ import (
 	"github.com/lilj_01/gin_gateway/controller"
 	"github.com/lilj_01/gin_gateway/docs"
 	"github.com/lilj_01/gin_gateway/middleware"
+	"github.com/lilj_01/gin_gateway/public"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
 	"log"
@@ -31,19 +32,31 @@ func InitRouter(middlewares ...gin.HandlerFunc) *gin.Engine {
 
 	// 将login-controller 注册到router
 	adminLoginRouter := router.Group("/admin_login")
-	redisStore, err := sessions.NewRedisStore(10,
-		"tcp", "101.34.146.196:6379", "", []byte(""))
+	store, err := sessions.NewRedisStore(10,
+		"tcp", "101.34.146.196:6379", "", []byte("secret"))
 	if err != nil {
 		log.Fatalf("sessions.NewRedisStore err: %v", err)
 	}
 	// 设置中间件
 	adminLoginRouter.Use(
-		sessions.Sessions("go-gateway-session", redisStore),
+		sessions.Sessions(public.GoGatewaySessionName, store),
 		middleware.RecoveryMiddleware(),
 		middleware.RequestLog(),
 		middleware.TranslationMiddleware())
 	{
 		controller.AdminLoginRegister(adminLoginRouter)
+	}
+
+	adminRouter := router.Group("/admin")
+	// 设置中间件
+	adminRouter.Use(
+		sessions.Sessions(public.GoGatewaySessionName, store),
+		middleware.RecoveryMiddleware(),
+		middleware.RequestLog(),
+		middleware.SessionAuthMiddleware(),
+		middleware.TranslationMiddleware())
+	{
+		controller.AdminRegister(adminRouter)
 	}
 	return router
 }

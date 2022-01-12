@@ -1,7 +1,8 @@
 package public
 
 const (
-	ValidatorKey        = "ValidatorKey"
-	TranslatorKey       = "TranslatorKey"
-	AdminSessionInfoKey = "AdminSessionInfoKey"
+	ValidatorKey         = "ValidatorKey"
+	TranslatorKey        = "TranslatorKey"
+	AdminSessionInfoKey  = "AdminSessionInfoKey"
+	GoGatewaySessionName = "GoGatewaySession"
 )

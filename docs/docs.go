@@ -23,6 +23,23 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/admin/admin_info": {
+            "get": {
+                "description": "登录信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员接口"
+                ],
+                "summary": "登录信息",
+                "operationId": "/admin/admin_info",
+                "responses": {}
+            }
+        },
         "/admin_login/login": {
             "post": {
                 "description": "管理员登录",

@@ -16,6 +16,18 @@ definitions:
 info:
   contact: {}
 paths:
+  /admin/admin_info:
+    get:
+      consumes:
+      - application/json
+      description: 登录信息
+      operationId: /admin/admin_info
+      produces:
+      - application/json
+      responses: {}
+      summary: 登录信息
+      tags:
+      - 管理员接口
   /admin_login/login:
     post:
       consumes:

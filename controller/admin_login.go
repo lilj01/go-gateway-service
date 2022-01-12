@@ -63,6 +63,7 @@ func (adminLogin *AdminLoginController) AdminLogin(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Set(public.AdminSessionInfoKey, string(sessBytes))
 	session.Save()
+
 	out := &dto.AdminLoginOutput{
 		Token: params.UserName,
 	}
