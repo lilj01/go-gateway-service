@@ -37,10 +37,12 @@ func (adminLogin *AdminLoginController) AdminLogin(c *gin.Context) {
 	if err := params.BindValidParam(c); err != nil {
 		middleware.ResponseError(c, 1001, err)
 	}
-	// Username查询取得管理员信息
-	// adminInfo.salt + params.Password sha256 ---> saltPassword
-	// saltPassword == adminInfo.password
+	// 管理员登录业务说明
+	// 1.Username查询取得管理员信息
+	// 2.adminInfo.salt + params.Password sha256 ---> saltPassword
+	// 2.saltPassword == adminInfo.password
 	admin := &dao.Admin{}
+	// 数据库连接池的获取 default 取自配置文件 conf/dev/mysql_map.toml
 	tx, err := lib.GetGormPool("default")
 	if err != nil {
 		middleware.ResponseError(c, 1002, err)
@@ -49,8 +51,16 @@ func (adminLogin *AdminLoginController) AdminLogin(c *gin.Context) {
 	if err != nil {
 		middleware.ResponseError(c, 1003, err)
 	}
-
 	// 保存登录信息到session
+	saveAdminInfoToSession(admin, c)
+	out := &dto.AdminLoginOutput{
+		Token: params.UserName,
+	}
+	middleware.ResponseSuccess(c, out)
+}
+
+// saveAdminInfoToSession 保存登录信息到session
+func saveAdminInfoToSession(admin *dao.Admin, c *gin.Context) {
 	sessionInfo := &dto.AdminSessionInfo{
 		ID:        admin.Id,
 		Username:  admin.Username,
@@ -63,9 +73,4 @@ func (adminLogin *AdminLoginController) AdminLogin(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Set(public.AdminSessionInfoKey, string(sessBytes))
 	session.Save()
-
-	out := &dto.AdminLoginOutput{
-		Token: params.UserName,
-	}
-	middleware.ResponseSuccess(c, out)
 }
