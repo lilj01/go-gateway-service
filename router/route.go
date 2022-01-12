@@ -30,13 +30,14 @@ func InitRouter(middlewares ...gin.HandlerFunc) *gin.Engine {
 	})
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// 将login-controller 注册到router
-	adminLoginRouter := router.Group("/admin_login")
 	store, err := sessions.NewRedisStore(10,
 		"tcp", "101.34.146.196:6379", "", []byte("secret"))
 	if err != nil {
 		log.Fatalf("sessions.NewRedisStore err: %v", err)
 	}
+
+	// 将login-controller 注册到router
+	adminLoginRouter := router.Group("/admin_login")
 	// 设置中间件
 	adminLoginRouter.Use(
 		sessions.Sessions(public.GoGatewaySessionName, store),
@@ -46,7 +47,6 @@ func InitRouter(middlewares ...gin.HandlerFunc) *gin.Engine {
 	{
 		controller.AdminLoginRegister(adminLoginRouter)
 	}
-
 	adminRouter := router.Group("/admin")
 	// 设置中间件
 	adminRouter.Use(

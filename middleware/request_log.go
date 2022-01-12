@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// 请求进入日志
+// RequestInLog 请求进入日志
 func RequestInLog(c *gin.Context) {
 	traceContext := lib.NewTrace()
 	if traceId := c.Request.Header.Get("com-header-rid"); traceId != "" {

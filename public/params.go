@@ -25,7 +25,7 @@ func DefaultGetValidParams(c *gin.Context, params interface{}) error {
 	err = valid.Struct(params)
 	if err != nil {
 		errs := err.(validator.ValidationErrors)
-		sliceErrs := []string{}
+		var sliceErrs []string
 		for _, e := range errs {
 			sliceErrs = append(sliceErrs, e.Translate(trans))
 		}
@@ -39,11 +39,11 @@ func GetValidator(c *gin.Context) (*validator.Validate, error) {
 	if !ok {
 		return nil, errors.New("未设置验证器")
 	}
-	validator, ok := val.(*validator.Validate)
+	validate, ok := val.(*validator.Validate)
 	if !ok {
 		return nil, errors.New("获取验证器失败")
 	}
-	return validator, nil
+	return validate, nil
 }
 
 func GetTranslation(c *gin.Context) (ut.Translator, error) {
