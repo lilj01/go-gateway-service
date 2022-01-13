@@ -21,6 +21,7 @@ func (t *ServiceInfo) TableName() string {
 	return "gateway_service_info"
 }
 
+//ServiceDetail 服务详情
 func (t *ServiceInfo) ServiceDetail(c *gin.Context, tx *gorm.DB, search *ServiceInfo) (*ServiceDetail, error) {
 	if search.ServiceName == "" {
 		info, err := t.Find(c, tx, search)
@@ -97,4 +98,9 @@ func (t *ServiceInfo) PageList(c *gin.Context, tx *gorm.DB, params *dto.ServiceL
 		return nil, 0, err
 	}
 	return list, count, nil
+}
+
+//Save 保存
+func (t *ServiceInfo) Save(c *gin.Context, tx *gorm.DB) error {
+	return tx.WithContext(c).Save(t).Error
 }

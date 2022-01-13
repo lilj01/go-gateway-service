@@ -17,6 +17,7 @@ type ServiceController struct {
 func ServiceRegister(group *gin.RouterGroup) {
 	service := &ServiceController{}
 	group.GET("/service_list", service.ServiceList)
+	group.GET("/service_delete", service.ServiceDelete)
 }
 
 // ServiceList godoc
@@ -34,24 +35,24 @@ func ServiceRegister(group *gin.RouterGroup) {
 func (*ServiceController) ServiceList(c *gin.Context) {
 	params := &dto.ServiceListInput{}
 	if err := params.BindValidParam(c); err != nil {
-		middleware.ResponseError(c, 2000, err)
+		middleware.ResponseError(c, 3000, err)
 		return
 	}
 	serviceModel := &models.ServiceInfo{}
 	tx, err := lib.GetGormPool("default")
 	if err != nil {
-		middleware.ResponseError(c, 3000, err)
+		middleware.ResponseError(c, 3001, err)
 		return
 	}
 	list, count, err := serviceModel.PageList(c, tx, params)
 	if err != nil {
-		middleware.ResponseError(c, 3001, err)
+		middleware.ResponseError(c, 3002, err)
 		return
 	}
 	var outList []dto.ServiceListItemOutput
 	outList, err = convert(list, tx, c)
 	if err != nil {
-		middleware.ResponseError(c, 3002, err)
+		middleware.ResponseError(c, 3003, err)
 		return
 	}
 	out := dto.ServiceListOutput{
@@ -110,4 +111,41 @@ func convert(list []models.ServiceInfo, tx *gorm.DB, c *gin.Context) ([]dto.Serv
 		outList = append(outList, outItem)
 	}
 	return outList, nil
+}
+
+// ServiceDelete godoc
+// @Summary 服务删除
+// @Description 服务删除
+// @Tags 服务管理
+// @ID /service/service_delete
+// @Accept  json
+// @Produce  json
+// @Param id query string true "服务ID"
+// @Success 200 {object} middleware.Response{data=string} "success"
+// @Router /service/service_delete [get]
+func (service *ServiceController) ServiceDelete(c *gin.Context) {
+	params := &dto.ServiceDeleteInput{}
+	if err := params.BindValidParam(c); err != nil {
+		middleware.ResponseError(c, 3005, err)
+		return
+	}
+	tx, err := lib.GetGormPool("default")
+	if err != nil {
+		middleware.ResponseError(c, 3006, err)
+		return
+	}
+	//读取基本信息
+	serviceInfo := &models.ServiceInfo{ID: params.ID}
+	serviceInfo, err = serviceInfo.Find(c, tx, serviceInfo)
+	if err != nil {
+		middleware.ResponseError(c, 3007, err)
+		return
+	}
+	//软删除
+	serviceInfo.IsDelete = 1
+	if err := serviceInfo.Save(c, tx); err != nil {
+		middleware.ResponseError(c, 3008, err)
+		return
+	}
+	middleware.ResponseSuccess(c, "success")
 }
