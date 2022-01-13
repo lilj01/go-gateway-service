@@ -16,7 +16,7 @@ type Admin struct {
 	Password string    `json:"password" gorm:"column:password" description:"密码"`
 	CreateAt time.Time `json:"create_at" gorm:"column:create_at" description:"创建时间"`
 	UpdateAt time.Time `json:"update_at" gorm:"column:update_at" description:"更新时间"`
-	IsDelete int       `json:"is_delete" gorm:"column:is_delete" description:"是否删除"`
+	IsDelete int8      `json:"is_delete" gorm:"column:is_delete" description:"是否删除"`
 }
 
 func (t *Admin) TableName() string {
@@ -26,14 +26,8 @@ func (t *Admin) TableName() string {
 // Find 查询
 func (t *Admin) Find(c *gin.Context, tx *gorm.DB, search *Admin) (*Admin, error) {
 	out := &Admin{}
-	query := tx.WithContext(c)
-	if search != nil && search.Username != "" {
-		query = query.Where("user_name = ?", search.Username)
-	}
-	if search != nil && search.Id != 0 {
-		query = query.Where("id = ?", search.Id)
-	}
-	query = query.Where("is_delete = ?", 0)
+	query := tx.WithContext(c).Where(search)
+	query.Where("is_delete = 0")
 	err := query.Find(out).Error
 	if err != nil {
 		return nil, err
@@ -43,7 +37,7 @@ func (t *Admin) Find(c *gin.Context, tx *gorm.DB, search *Admin) (*Admin, error)
 
 // LoginCheck 登录检查
 func (t *Admin) LoginCheck(c *gin.Context, tx *gorm.DB, param *dto.AdminLoginInput) (*Admin, error) {
-	adminInfo, err := t.Find(c, tx, &Admin{Username: param.UserName})
+	adminInfo, err := t.Find(c, tx, &Admin{Username: param.UserName, IsDelete: 0})
 	if err != nil {
 		return nil, errors.New("管理员信息不存在")
 	}
