@@ -8,6 +8,7 @@ import (
 	"github.com/lilj_01/gin_gateway/middleware"
 	"github.com/lilj_01/gin_gateway/models"
 	"github.com/lilj_01/gin_gateway/public"
+	"gorm.io/gorm"
 )
 
 type ServiceController struct {
@@ -47,21 +48,34 @@ func (*ServiceController) ServiceList(c *gin.Context) {
 		middleware.ResponseError(c, 3001, err)
 		return
 	}
-
 	var outList []dto.ServiceListItemOutput
+	outList, err = convert(list, tx, c)
+	if err != nil {
+		middleware.ResponseError(c, 3002, err)
+		return
+	}
+	out := dto.ServiceListOutput{
+		Total: count,
+		List:  outList,
+	}
+	middleware.ResponseSuccess(c, out)
+}
+
+// convert
+//1、http后缀接入 clusterIP+clusterPort+path
+//2、http域名接入 domain
+//3、tcp、grpc接入 clusterIP+servicePort
+func convert(list []models.ServiceInfo, tx *gorm.DB, c *gin.Context) ([]dto.ServiceListItemOutput, error) {
+	var outList []dto.ServiceListItemOutput
+	clusterIP := lib.GetStringConf("base.cluster.cluster_ip")
+	clusterPort := lib.GetStringConf("base.cluster.cluster_port")
+	clusterSSLPort := lib.GetStringConf("base.cluster.cluster_ssl_port")
 	for _, listItem := range list {
 		serviceDetail, err := listItem.ServiceDetail(c, tx, &listItem)
 		if err != nil {
-			middleware.ResponseError(c, 2003, err)
-			return
+			return nil, err
 		}
-		//1、http后缀接入 clusterIP+clusterPort+path
-		//2、http域名接入 domain
-		//3、tcp、grpc接入 clusterIP+servicePort
 		serviceAddr := "unKnow"
-		clusterIP := lib.GetStringConf("base.cluster.cluster_ip")
-		clusterPort := lib.GetStringConf("base.cluster.cluster_port")
-		clusterSSLPort := lib.GetStringConf("base.cluster.cluster_ssl_port")
 		if serviceDetail.Info.LoadType == public.LoadTypeHTTP &&
 			serviceDetail.HTTPRule.RuleType == public.HTTPRuleTypePrefixURL &&
 			serviceDetail.HTTPRule.NeedHttps == 1 {
@@ -83,10 +97,6 @@ func (*ServiceController) ServiceList(c *gin.Context) {
 			serviceAddr = fmt.Sprintf("%s:%d", clusterIP, serviceDetail.GRPCRule.Port)
 		}
 		ipList := serviceDetail.LoadBalance.GetIPListByModel()
-		if err != nil {
-			middleware.ResponseError(c, 2004, err)
-			return
-		}
 		outItem := dto.ServiceListItemOutput{
 			ID:          listItem.ID,
 			LoadType:    listItem.LoadType,
@@ -99,9 +109,5 @@ func (*ServiceController) ServiceList(c *gin.Context) {
 		}
 		outList = append(outList, outItem)
 	}
-	out := dto.ServiceListOutput{
-		Total: count,
-		List:  outList,
-	}
-	middleware.ResponseSuccess(c, out)
+	return outList, nil
 }
