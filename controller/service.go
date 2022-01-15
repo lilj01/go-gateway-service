@@ -8,7 +8,9 @@ import (
 	"github.com/lilj_01/gin_gateway/middleware"
 	"github.com/lilj_01/gin_gateway/models"
 	"github.com/lilj_01/gin_gateway/public"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"strings"
 )
 
 type ServiceController struct {
@@ -18,6 +20,7 @@ func ServiceRegister(group *gin.RouterGroup) {
 	service := &ServiceController{}
 	group.GET("/service_list", service.ServiceList)
 	group.GET("/service_delete", service.ServiceDelete)
+	group.POST("/service_add_http", service.ServiceAddHTTP)
 }
 
 // ServiceList godoc
@@ -123,7 +126,7 @@ func convert(list []models.ServiceInfo, tx *gorm.DB, c *gin.Context) ([]dto.Serv
 // @Param id query string true "服务ID"
 // @Success 200 {object} middleware.Response{data=string} "success"
 // @Router /service/service_delete [get]
-func (service *ServiceController) ServiceDelete(c *gin.Context) {
+func (*ServiceController) ServiceDelete(c *gin.Context) {
 	params := &dto.ServiceDeleteInput{}
 	if err := params.BindValidParam(c); err != nil {
 		middleware.ResponseError(c, 3005, err)
@@ -148,4 +151,105 @@ func (service *ServiceController) ServiceDelete(c *gin.Context) {
 		return
 	}
 	middleware.ResponseSuccess(c, "success")
+}
+
+// ServiceAddHTTP godoc
+// @Summary 添加HTTP服务
+// @Description 添加HTTP服务
+// @Tags 服务管理
+// @ID /service/service_add_http
+// @Accept  json
+// @Produce  json
+// @Param body body dto.ServiceAddHTTPInput true "body"
+// @Success 200 {object} middleware.Response{data=string} "success"
+// @Router /service/service_add_http [post]
+func (*ServiceController) ServiceAddHTTP(c *gin.Context) {
+	params := &dto.ServiceAddHTTPInput{}
+	if err := params.BindValidParam(c); err != nil {
+		middleware.ResponseError(c, 3009, err)
+		return
+	}
+	if len(strings.Split(params.IpList, ",")) != len(strings.Split(params.WeightList, ",")) {
+		middleware.ResponseError(c, 3013, errors.New("IP列表与权重列表数量不一致"))
+		return
+	}
+	saveServiceHttp(c, params)
+}
+
+//saveServiceHttp 添加HTTP服务
+func saveServiceHttp(c *gin.Context, params *dto.ServiceAddHTTPInput) {
+	tx, err := lib.GetGormPool("default")
+	if err != nil {
+		middleware.ResponseError(c, 3010, err)
+		return
+	}
+	tx = tx.Begin()
+	serviceInfo := &models.ServiceInfo{ServiceName: params.ServiceName}
+	serviceInfo, err = serviceInfo.Find(c, tx, serviceInfo)
+	if serviceInfo != nil && strings.Compare(serviceInfo.ServiceName, params.ServiceName) == 0 {
+		tx.Rollback()
+		middleware.ResponseError(c, 3011, errors.New("服务已存在"))
+		return
+	}
+	httpUrl := &models.HttpRule{RuleType: params.RuleType, Rule: params.Rule}
+	httpUrl, err = httpUrl.Find(c, tx, httpUrl)
+	if httpUrl != nil && httpUrl.RuleType == params.RuleType && httpUrl.Rule == params.Rule {
+		tx.Rollback()
+		middleware.ResponseError(c, 3012, errors.New("服务接入前缀或域名已存在"))
+		return
+	}
+	serviceModel := &models.ServiceInfo{
+		ServiceName: params.ServiceName,
+		ServiceDesc: params.ServiceDesc,
+	}
+	if err := serviceModel.Save(c, tx); err != nil {
+		tx.Rollback()
+		middleware.ResponseError(c, 3013, err)
+		return
+	}
+	httpRule := &models.HttpRule{
+		ServiceID:      serviceModel.ID,
+		RuleType:       params.RuleType,
+		Rule:           params.Rule,
+		NeedHttps:      params.NeedHttps,
+		NeedStripUri:   params.NeedStripUri,
+		NeedWebsocket:  params.NeedWebsocket,
+		UrlRewrite:     params.UrlRewrite,
+		HeaderTransfor: params.HeaderTransfor,
+	}
+	if err := httpRule.Save(c, tx); err != nil {
+		tx.Rollback()
+		middleware.ResponseError(c, 2006, err)
+		return
+	}
+	accessControl := &models.AccessControl{
+		ServiceID:         serviceModel.ID,
+		OpenAuth:          params.OpenAuth,
+		BlackList:         params.BlackList,
+		WhiteList:         params.WhiteList,
+		ClientIPFlowLimit: params.ClientipFlowLimit,
+		ServiceFlowLimit:  params.ServiceFlowLimit,
+	}
+	if err := accessControl.Save(c, tx); err != nil {
+		tx.Rollback()
+		middleware.ResponseError(c, 2007, err)
+		return
+	}
+	loadBalance := &models.LoadBalance{
+		ServiceID:              serviceModel.ID,
+		RoundType:              params.RoundType,
+		IpList:                 params.IpList,
+		WeightList:             params.WeightList,
+		UpstreamConnectTimeout: params.UpstreamConnectTimeout,
+		UpstreamHeaderTimeout:  params.UpstreamHeaderTimeout,
+		UpstreamIdleTimeout:    params.UpstreamIdleTimeout,
+		UpstreamMaxIdle:        params.UpstreamMaxIdle,
+	}
+	if err := loadBalance.Save(c, tx); err != nil {
+		tx.Rollback()
+		middleware.ResponseError(c, 2008, err)
+		return
+	}
+	tx.Commit()
+	middleware.ResponseSuccess(c, "")
 }
