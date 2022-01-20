@@ -28,7 +28,11 @@ github：`https://github.com/lilj01/go-gateway-service`
 
 ### 服务器部署
 
-待补充，会补充 k8s 部署方式
+docker方式部署   参考：
+
+`https://gitee.com/bclz_xc/lilj_notes/tree/main/docker/go-gateway-docker`
+
+`https://github.com/lilj01/notes/tree/main/docker/go-gateway-docker`
 
 ## go 微服务网关项目前端地址
 
