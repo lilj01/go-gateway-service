@@ -79,21 +79,20 @@ func (t *ServiceInfo) Find(c *gin.Context, tx *gorm.DB, search *ServiceInfo) (*S
 
 // PageList 分页查询
 func (t *ServiceInfo) PageList(c *gin.Context, tx *gorm.DB, params *dto.ServiceListInput) ([]ServiceInfo, int64, error) {
-	var count int64 = 0
 	var list []ServiceInfo
-	// 偏移量计算
+	var count int64
 	offset := (params.PageNo - 1) * params.PageSize
 	query := tx.WithContext(c)
-	// 设置TableName是因为count时需要
-	query = query.Table(t.TableName()).Where("is_delete = ?", 0)
 	if params.Info != "" {
-		query = query.Where("(service_name like ? or service_desc like ?)", "%"+params.Info+"%", "%"+params.Info+"%")
+		query = query.Where("service_name like ?", "%"+params.Info+"%")
+		query = query.Where("service_desc like ?", "%"+params.Info+"%")
 	}
+	query = query.Where("is_delete = 1")
+	errCount := query.Table(t.TableName()).Count(&count).Error
 	err := query.Limit(params.PageSize).Offset(offset).Find(&list).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, 0, err
 	}
-	errCount := query.Table(t.TableName()).Count(&count).Error
 	if errCount != nil {
 		return nil, 0, err
 	}

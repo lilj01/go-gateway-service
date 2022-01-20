@@ -27,7 +27,6 @@ func (t *Admin) TableName() string {
 func (t *Admin) Find(c *gin.Context, tx *gorm.DB, search *Admin) (*Admin, error) {
 	out := &Admin{}
 	query := tx.WithContext(c).Where(search)
-	query.Where("is_delete = 0")
 	err := query.Find(out).Error
 	if err != nil {
 		return nil, err
@@ -37,7 +36,7 @@ func (t *Admin) Find(c *gin.Context, tx *gorm.DB, search *Admin) (*Admin, error)
 
 // LoginCheck 登录检查
 func (t *Admin) LoginCheck(c *gin.Context, tx *gorm.DB, param *dto.AdminLoginInput) (*Admin, error) {
-	adminInfo, err := t.Find(c, tx, &Admin{Username: param.UserName, IsDelete: 0})
+	adminInfo, err := t.Find(c, tx, &Admin{Username: param.UserName, IsDelete: 1})
 	if err != nil {
 		return nil, errors.New("管理员信息不存在")
 	}

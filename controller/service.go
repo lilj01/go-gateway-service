@@ -48,6 +48,8 @@ func (*ServiceController) ServiceList(c *gin.Context) {
 		return
 	}
 	list, count, err := serviceModel.PageList(c, tx, params)
+	fmt.Printf("list = %+v \n", list)
+	fmt.Printf("count = %d \n", count)
 	if err != nil {
 		middleware.ResponseError(c, 3002, err)
 		return

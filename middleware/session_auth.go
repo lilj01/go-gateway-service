@@ -12,7 +12,7 @@ func SessionAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 		adminInfo, ok := session.Get(public.AdminSessionInfoKey).(string)
-		fmt.Printf("session adminInfo = %s", adminInfo)
+		fmt.Printf("session adminInfo = %s\n", adminInfo)
 		if !ok || adminInfo == "" {
 			ResponseError(c, InternalErrorCode, errors.New("user not login"))
 			c.Abort()
