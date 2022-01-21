@@ -48,8 +48,6 @@ func (*ServiceController) ServiceList(c *gin.Context) {
 		return
 	}
 	list, count, err := serviceModel.PageList(c, tx, params)
-	fmt.Printf("list = %+v \n", list)
-	fmt.Printf("count = %d \n", count)
 	if err != nil {
 		middleware.ResponseError(c, 3002, err)
 		return
@@ -147,7 +145,7 @@ func (*ServiceController) ServiceDelete(c *gin.Context) {
 		return
 	}
 	//软删除
-	serviceInfo.IsDelete = 1
+	serviceInfo.IsDelete = public.UnValid
 	if err := serviceInfo.Save(c, tx); err != nil {
 		middleware.ResponseError(c, 3008, err)
 		return
@@ -203,6 +201,7 @@ func saveServiceHttp(c *gin.Context, params *dto.ServiceAddHTTPInput) {
 	serviceModel := &models.ServiceInfo{
 		ServiceName: params.ServiceName,
 		ServiceDesc: params.ServiceDesc,
+		IsDelete:    public.Valid,
 	}
 	if err := serviceModel.Save(c, tx); err != nil {
 		tx.Rollback()

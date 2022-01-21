@@ -36,7 +36,7 @@ func (t *Admin) Find(c *gin.Context, tx *gorm.DB, search *Admin) (*Admin, error)
 
 // LoginCheck 登录检查
 func (t *Admin) LoginCheck(c *gin.Context, tx *gorm.DB, param *dto.AdminLoginInput) (*Admin, error) {
-	adminInfo, err := t.Find(c, tx, &Admin{Username: param.UserName, IsDelete: 1})
+	adminInfo, err := t.Find(c, tx, &Admin{Username: param.UserName, IsDelete: public.Valid})
 	if err != nil {
 		return nil, errors.New("管理员信息不存在")
 	}

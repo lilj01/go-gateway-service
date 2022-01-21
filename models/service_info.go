@@ -3,6 +3,7 @@ package models
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/lilj_01/gin_gateway/dto"
+	"github.com/lilj_01/gin_gateway/public"
 	"gorm.io/gorm"
 	"time"
 )
@@ -87,7 +88,7 @@ func (t *ServiceInfo) PageList(c *gin.Context, tx *gorm.DB, params *dto.ServiceL
 		query = query.Where("service_name like ?", "%"+params.Info+"%")
 		query = query.Where("service_desc like ?", "%"+params.Info+"%")
 	}
-	query = query.Where("is_delete = 1")
+	query = query.Where("is_delete = ?", public.Valid)
 	errCount := query.Table(t.TableName()).Count(&count).Error
 	err := query.Limit(params.PageSize).Offset(offset).Find(&list).Error
 	if err != nil && err != gorm.ErrRecordNotFound {

@@ -89,7 +89,7 @@ func (adminLogin *AdminController) ChangePwd(c *gin.Context) {
 	adminModel, err = adminModel.Find(c, tx, &models.Admin{
 		Username: adminSessionInfo.Username,
 		Id:       adminSessionInfo.ID,
-		IsDelete: 1,
+		IsDelete: public.Valid,
 	})
 	if err != nil {
 		middleware.ResponseError(c, 2004, err)
