@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"github.com/e421083458/golang_common/lib"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -30,8 +31,10 @@ func InitRouter(middlewares ...gin.HandlerFunc) *gin.Engine {
 	})
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	redisConnStr := lib.GetStringConf("base.session.redis_server")
+	fmt.Printf("redisConnStr = %s\n", redisConnStr)
 	store, err := sessions.NewRedisStore(10,
-		"tcp", "101.34.146.196:6379", "", []byte("secret"))
+		"tcp", redisConnStr, "", []byte("secret"))
 	if err != nil {
 		log.Fatalf("sessions.NewRedisStore err: %v", err)
 	}

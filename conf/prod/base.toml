@@ -36,3 +36,6 @@
     desc="This is a sample server celler server."
     host="101.34.146.196:8880"
     base_path=""
+
+[session]
+    redis_server = "172.17.0.10:1124"   #redis session server
